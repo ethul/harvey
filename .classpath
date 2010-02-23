@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="_harvey/platform/_out" path="_harvey/platform/_src"/>
+	<classpathentry kind="src" output="_harvey/platform/_out" path="_harvey/platform/_test"/>
+	<classpathentry kind="con" path="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="_out"/>
+</classpath>
