@@ -12,7 +12,6 @@ import javax.sound.midi.MidiSystem
 trait SoundDevice {
   def sinks(): List[SignalSink]
   def release(): Unit
-  def about(): String
 }
 
 /**
@@ -38,8 +37,7 @@ object SoundDevice {
     
     def sinks(): List[SignalSink] = midiSinks
     def release(): Unit = synthesizer.close 
-    
-    def about(): String = {
+    override def toString(): String = {
       "vendor: " + synthesizer.getDeviceInfo.getVendor + "\n" +
       "name: " + synthesizer.getDeviceInfo.getName + "\n" +
       "description: " + synthesizer.getDeviceInfo.getDescription + "\n" +

@@ -7,7 +7,7 @@ sealed abstract class SignalSource(sink: SignalSink) {
   def transmit(signal: Signal, duration: Long): Unit
 }
 
-case class MidiSource(sink: MidiSink) extends SignalSource(sink) {
+case class MidiSource(sink: SignalSink) extends SignalSource(sink) {
   def transmit(signal: Signal) {
     sink.receive(signal)
   }
