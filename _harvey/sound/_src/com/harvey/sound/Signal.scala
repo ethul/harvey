@@ -6,6 +6,6 @@ sealed abstract class Signal(value: Int) {
   def value(): Int
 }
 
-case class MidiSignal(command: Int, value: Int) extends Signal(value) {
-  def this(value: Int) = this(ShortMessage.NOTE_ON, value)
-}
+case class MidiSignalOn(value: Int, velocity: Int) extends Signal(value)
+case class MidiSignalOff(value: Int) extends Signal(value)
+case class MidiProgramSignal(value: Int) extends Signal(value)

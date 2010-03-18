@@ -1,13 +1,11 @@
 package com.harvey.platform.util
 
-abstract class RandomNumberAccessor {
-  def rand(): Double
-  def rand(max: Int): Double = max * rand
-  def randInt(): Int = randInt(1)
-  def randInt(max: Int) = rand(max).floor.asInstanceOf[Int]
+abstract class RandomNumberGenerator {
+  def rand(): Double 
 }
 
-class UniformRandomNumberAccessor extends RandomNumberAccessor {
+class UniformRandomNumberGenerator extends RandomNumberGenerator {
+  private val lock = new Object
   private val nanoTime = System.nanoTime.toString
   private val nanoLength = nanoTime.length
   private val factor = 1.0 / 2147483563.0
@@ -18,7 +16,7 @@ class UniformRandomNumberAccessor extends RandomNumberAccessor {
    * this algorithm is from
    * http://cg.scs.carleton.ca/~luc/lecuyer.c
    */
-  def rand(): Double = {
+  def rand(): Double = lock.synchronized {
     var k = s1 / 53668L
     
     s1 = 40014 * (s1 % 53668) - k * 12211
@@ -41,5 +39,36 @@ class UniformRandomNumberAccessor extends RandomNumberAccessor {
     }
   
     z * factor;
+  }
+}
+
+class NormalRandomNumberGenerator(m: Double, s: Double) extends RandomNumberGenerator {
+  private var random = new UniformRandomNumberGenerator
+  private var normal_x2_valid = false
+  private var normal_x2 = 0.0
+  
+  def rand(): Double = {
+    var normal_x1 = 0.0
+    var w = 0.0 
+    
+    if (normal_x2_valid) {
+      normal_x2_valid = false
+      normal_x2 * s + m
+    }    
+    else {
+      do {
+        normal_x1 = 2.0 * random.rand - 1.0
+        normal_x2 = 2.0 * random.rand - 1.0
+        w = normal_x1 * normal_x1 + normal_x2 * normal_x2
+      }
+      while (w >= 1.0 || w < 1e-30)
+    
+      w = Math.sqrt(Math.log(w)*(-2.0/w))
+      normal_x1 *= w
+      normal_x2 *= w
+      normal_x2_valid = true
+    
+      normal_x1 * s + m
+    }
   }
 }

@@ -10,9 +10,9 @@ sealed abstract class SignalSink {
 case class MidiSink(channel: MidiChannel) extends SignalSink {
   def receive(signal: Signal) {
     signal match {
-      case MidiSignal(ShortMessage.NOTE_ON, _ @ s) => channel.noteOn(s, 60)
-      case MidiSignal(ShortMessage.NOTE_OFF, _ @ s) => channel.noteOff(s)
-      case MidiSignal(ShortMessage.PROGRAM_CHANGE, _ @ s) => channel.programChange(s)
+      case MidiSignalOn(_ @ s, _ @ t) => channel.noteOn(s, t)
+      case MidiSignalOff(_ @ s) => channel.noteOff(s)
+      case MidiProgramSignal(_ @ s) => channel.programChange(s)
     }
   }
 }
