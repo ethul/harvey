@@ -9,3 +9,4 @@ sealed abstract class Signal(value: Int) {
 case class MidiSignalOn(value: Int, velocity: Int) extends Signal(value)
 case class MidiSignalOff(value: Int) extends Signal(value)
 case class MidiProgramSignal(value: Int) extends Signal(value)
+case class MidiSignalOnWithDuration(value: Int, velocity: Int, duration: Int) extends Signal(value)

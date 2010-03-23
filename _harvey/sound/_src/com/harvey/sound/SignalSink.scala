@@ -13,6 +13,7 @@ case class MidiSink(channel: MidiChannel) extends SignalSink {
       case MidiSignalOn(_ @ s, _ @ t) => channel.noteOn(s, t)
       case MidiSignalOff(_ @ s) => channel.noteOff(s)
       case MidiProgramSignal(_ @ s) => channel.programChange(s)
+      case _ => println("unmatched")
     }
   }
 }

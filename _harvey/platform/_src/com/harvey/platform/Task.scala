@@ -9,3 +9,15 @@ case class ExpirableTask(task: Function0[Unit], expiration: Long) extends Task(t
     }
   }
 }
+
+case class StoppableTask(task: Function0[Unit]) extends Task(task) {
+  private var stopTask = false
+  def stop {
+    stopTask = true
+  }
+  def apply() {
+    while (!stopTask) {
+      task()
+    }
+  }
+}

@@ -1,5 +1,7 @@
 package com.harvey.platform
 
+import com.harvey.gui.GuiFacade
+
 /**
  * this object is the entry point
  * 
@@ -9,6 +11,6 @@ package com.harvey.platform
  */
 object Harvey {
   def main(args: Array[String]) {
-    new Facade startup
+    (new GuiFacade).startup(new Facade)
   }
 }

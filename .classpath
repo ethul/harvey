@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" output="_harvey/platform/_out" path="_harvey/platform/_src"/>
+	<classpathentry kind="src" output="_harvey/gui/_out" path="_harvey/gui/_src"/>
+	<classpathentry kind="src" output="_harvey/gui/_out" path="_harvey/gui/_test"/>
 	<classpathentry kind="src" output="_harvey/sound/_out" path="_harvey/sound/_src"/>
 	<classpathentry kind="src" output="_harvey/sound/_out" path="_harvey/sound/_test"/>
 	<classpathentry kind="src" output="_harvey/platform/_out" path="_harvey/platform/_test"/>
