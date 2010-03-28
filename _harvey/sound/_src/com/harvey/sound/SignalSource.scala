@@ -1,82 +1,87 @@
 package com.harvey.sound
 
-import com.harvey.platform.Oracle
+import com.harvey.platform.{Manager,Oracle}
 import com.harvey.platform.util.Logger
+
+import scala.actors.Actor
+import scala.actors.Actor._
+
 import javax.sound.midi.ShortMessage
 
-sealed abstract class SignalSource(sink: SignalSink, oracle: Oracle) {
+sealed abstract class SignalSource(sink: SignalSink, oracle: Oracle) extends Actor {
+  def act() {
+    loop {
+      react {
+        case "stop" => {
+          sink ! "stop"
+          exit
+        }
+        case ("broadcasted", "stop", _) => {
+          sink ! "stop"
+          exit
+        }
+        case ("broadcasted", _ @ message, sender: Actor) => {
+          println("got broadcasted: " + message)
+        }
+        case "transmit" => {
+          if (regenerate) {
+            println("done with variation")
+            generate()
+            transmit()
+          }
+          else {
+            transmit()
+          }
+        }
+        case "generate" => {
+          generate()
+          transmit()
+        }
+        case _ @ signal: Signal => {
+          sink ! signal
+        }
+      }
+    }
+  }
+  def generate(): Unit
+  def regenerate(): Boolean
   def transmit(): Unit
-  def transmit(signal: Signal): Unit
-}
-
-case class MidiSource(sink: SignalSink, oracle: Oracle) extends SignalSource(sink, oracle) {
-  val intervals = List(-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12)
-  // x..x..x...x.x...
-  val durations = List(400,600,600,800,800)
-  val duration = 2000.0
-  val velocity = 120.0
-  val maximum = 100
-  val minimum = 30
-  var tone = 60 
-  
-  def transmit() {
-    //val d = (duration * oracle.ask.asInstanceOf[Double]).toLong
-    val d = durations((durations.length * oracle.ask.asInstanceOf[Double]).floor.toInt) 
-    val i = intervals((intervals.length * oracle.ask.asInstanceOf[Double]).floor.toInt) 
-    val v = (velocity * oracle.ask.asInstanceOf[Double]).toInt
-    
-    tone = tone + i
-    
-    if (tone > maximum) {
-      tone = minimum
-    }
-    else if (tone < minimum) {
-      tone = maximum
-    }
-    
-    Logger.log("sounding["+tone+","+d+","+v+"]\n")
-    sink.receive(MidiSignalOn(tone, v))
-    Thread.sleep(d)
-    sink.receive(MidiSignalOff(tone))
-  }
-  
-  def transmit(signal: Signal) {
-    sink.receive(signal)
-  }
-  
-  override def toString(): String = {
-    "MidiSource {\n" +
-    "  sink={" + sink.toString + "}\n" +
-    "  oracle={" + oracle.toString + "}\n" +
-    "}"
-  }
 }
 
 case class PatternMidiSource(pattern: SignalPattern, sink: SignalSink, oracle: Oracle) 
 extends SignalSource(sink, oracle) {
+  val id = hashCode
   val operations = List(SignalIdentity(), SignalReverse(), SignalNullify(), SignalInverse(), SignalFlipFlop(), SignalHalfs())
-  val durations = List(400,600,600,800,800)
-  val durationmax = 1000.0
+  val metas = List(SignalMetaModifyPattern(pattern), SignalMetaRedistributeDurations(pattern))
+  var current = pattern
+  var variation = List[Signal]()
   
-  def transmit() {
-    val op = operations((operations.length * oracle.ask.asInstanceOf[Double]).floor.toInt) 
-    val variation = op(pattern)
-    
-    Logger.log("variation["+op+"] {\n")
-    variation.asList.foreach { signal =>
-      //val duration = durations((durations.length * oracle.ask.asInstanceOf[Double]).floor.toInt) 
-      //val duration = (durationmax * oracle.ask.asInstanceOf[Double]).toInt
-      val s = signal.asInstanceOf[MidiSignalOnWithDuration]
-      Logger.log("  sounding["+s+"]\n")
-      sink.receive(MidiSignalOn(s.value, s.velocity))
-      Thread.sleep(s.duration)
-      sink.receive(MidiSignalOff(s.value))
+  def generate() {
+    if (oracle.ask.asInstanceOf[Double] > 0.99) {
+      val context: SignalContext = MidiSignalContext
+      val meta = metas((metas.length * oracle.ask.asInstanceOf[Double]).floor.toInt)
+      Logger.log("meta["+id+"]["+meta+"] {\n")
+      current = meta(oracle, context)
+      Logger.log("current["+id+"]["+current.asList.mkString("{\n  ","\n  ","}\n")+"]")
+      Logger.log("}\n")
+      Manager broadcast "pattern change to you"
+      println("broadcast sent")
     }
-    Logger.log("}\n")
+    
+    val op = operations((operations.length * oracle.ask.asInstanceOf[Double]).floor.toInt) 
+    //val v = op(current)
+    val v = current
+    variation = v.asList
+    
+    Logger.log("variation["+id+"]["+op+"]\n")
   }
   
-  def transmit(signal: Signal) {
-    sink.receive(signal)
+  def regenerate() = variation == Nil
+  
+  def transmit() {
+    println("sending to sink")
+    sink ! (variation.head.asInstanceOf[MidiSignalOnWithDuration], self)
+    variation = variation.tail
   }
   
   override def toString(): String = {
