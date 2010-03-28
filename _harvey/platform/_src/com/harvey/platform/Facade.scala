@@ -1,7 +1,7 @@
 package com.harvey.platform
 
 import com.harvey.platform.util._
-import com.harvey.sound.{MidiSource,MidiSink,MidiProgramSignal,SoundDevice}
+import com.harvey.sound.{MidiSink,MidiProgramSignal,SoundDevice}
 import com.harvey.sound.{PatternMidiSource,MidiSignalOnWithDuration,SignalPattern}
 import com.harvey.sound.{SignalContext,MidiSignalContext}
 import com.harvey.sound.{SignalMetaGeneratePattern}
