@@ -1,10 +1,11 @@
 package com.harvey.platform
 
 import com.harvey.platform.util._
-import com.harvey.sound.{MidiSink,MidiProgramSignal,SoundDevice}
-import com.harvey.sound.{PatternMidiSource,MidiSignalOnWithDuration,SignalPattern}
+import com.harvey.sound.{MidiSink,MidiProgramSignal,SoundDevice,SoundException}
+import com.harvey.sound.{MidiSource,SignalSource,MidiSignalOnWithDuration,SignalPattern}
 import com.harvey.sound.{SignalContext,MidiSignalContext}
-import com.harvey.sound.{SignalMetaGeneratePattern}
+import com.harvey.sound.{SignalCompositeOperation,SignalFlattenAmplitude,SignalEvenlyDistributeDuration,SignalBinaryFission,SignalBinaryFusion,SignalMetaGeneratePattern}
+import com.harvey.sound.{SignalIdentity,SignalReverse,SignalInverse,SignalFlipFlop,SignalHalfs,SignalAccentOneThree,SignalModulate,SignalDoubleDuration,SignalHalfDuration}
 
 import scala.collection.mutable.ListBuffer
 
@@ -12,50 +13,144 @@ import java.util.concurrent.CountDownLatch
 
 import javax.sound.midi._
 
+/**
+ * this class represents the facade for harvey exposing a simple startup/shutdown interface
+ * 
+ * @author ethul
+ * @date 2010.02.22
+ * @email eric.thul AT gmail.com
+ */
 class Facade {
-  var started = false
-  var device: SoundDevice = null
-  val context: SignalContext = MidiSignalContext
-  val oracle: Oracle = new UniformRandomNumberGenerator with Oracle {
-    type T = Double
-    def ask(): T = rand()
+  private val context: SignalContext = MidiSignalContext
+  private var device: SoundDevice = _
+  private var mstarted = false
+  
+  Oracle install {
+    new UniformRandomNumberGenerator with Oracle {
+      def ask(): Double = rand()
+    }
   }
   
+  private def started_= (started: Boolean) {
+    mstarted = started
+  }
+  
+  /**
+   * accessor method to determine if the facade has started
+   * 
+   * @return true if the facade has already been started, false otherwise
+   */
+  def started = mstarted
+  
+  /**
+   * handles the necessary steps to start up harvey
+   */
   def startup() {
-    device = SoundDevice()
+    try {
+      device = SoundDevice()
+      innerStartup()
+      started = true
+    }
+    catch {
+      case e: SoundException => Logger.log(e.getMessage + "\n")
+    }
+  }
     
-    //val j = (8 * oracle.ask.asInstanceOf[Double]).floor.toInt
-    val j = 2
-    val meta = SignalMetaGeneratePattern()
-    val pattern = meta(oracle, context)
+  /**
+   * handles the necessary steps to shutdown harvey
+   */
+  def shutdown() {
+    if (started) {
+      Manager broadcast StopMessage()
+      Manager.detachAll
+      HistogramAccessor.uninstall
+      device.release
+      started = false
+    }
+  }
+    
+  private def innerStartup()
+  {
+    val j = 3
+    val melody = SignalMetaGeneratePattern()(context)
+    val rhythm = SignalAccentOneThree()(melody)
     val sinks = device.sinks.slice(0,j)
-    val sources = for (i <- 0 to sinks.length-1) yield {
-      PatternMidiSource(pattern, sinks(i), oracle)
+    
+    val rhythmOperations = List(
+      SignalIdentity(), SignalBinaryFission(), SignalBinaryFusion(), SignalIdentity(),
+      SignalBinaryFusion(), SignalIdentity(), SignalBinaryFusion(), SignalDoubleDuration(),
+      SignalHalfDuration()
+//      SignalCompositeOperation(SignalFlattenAmplitude() :: SignalEvenlyDistributeDuration() :: SignalBinaryFission() :: Nil),
+//      SignalCompositeOperation(SignalFlattenAmplitude() :: SignalEvenlyDistributeDuration() :: SignalBinaryFusion() :: Nil),
+//      SignalCompositeOperation(SignalFlattenAmplitude() :: SignalEvenlyDistributeDuration() :: Nil)
+    )
+    
+    val melodyOperations = List(
+      SignalIdentity(), SignalReverse(), SignalInverse(), SignalFlipFlop(), SignalBinaryFusion(), 
+      SignalBinaryFission(), SignalModulate(), SignalDoubleDuration(), SignalHalfDuration()
+    )
+    
+    val rhythmHistogram = new ListHistogram(rhythmOperations.length)
+    val melodyHistogram1 = new ListHistogram(melodyOperations.length)
+    val melodyHistogram2 = new ListHistogram(melodyOperations.length)
+    
+//    val sourcesA = 
+//      for (i <- 0 to j-2) 
+//        yield new MidiSource(pattern, sinks(i)) {
+//          def operations() = opsA
+//          def metas() = throw new UnsupportedOperationException
+//        }
+    
+//    val presignalsA = 
+//      for (i <- 0 to j-2)
+//        yield MidiProgramSignal {
+//          context.zeroLengthSources {
+//            (context.zeroLengthSources.length * Oracle.ask).floor.toInt
+//          }
+//        }
+    
+    val rhythmSource = new MidiSource(rhythm, sinks(0)) {
+      def operations() = rhythmOperations
+      def metas() = throw new UnsupportedOperationException  
     }
     
-    val zero = context.zeroLengthSources((context.zeroLengthSources.length * oracle.ask.asInstanceOf[Double]).floor.toInt)
-    Logger.log("instrument:" + zero + "\n")
+    val melodySource1 = new MidiSource(melody, sinks(1)) {
+      def operations() = melodyOperations
+      def metas() = throw new UnsupportedOperationException  
+    }
     
-    val low = context.lowFrequencySources((context.lowFrequencySources.length * oracle.ask.asInstanceOf[Double]).floor.toInt)
-    Logger.log("instrument:" + low + "\n")
+    val melodySource2 = new MidiSource(melody, sinks(2)) {
+      def operations() = melodyOperations
+      def metas() = throw new UnsupportedOperationException  
+    }
+  
+    val rhythmPresignal = MidiProgramSignal {
+      context.zeroLengthSources {
+        (context.zeroLengthSources.length * Oracle.ask).floor.toInt
+      }
+    }
     
-    var presignals = MidiProgramSignal(zero) :: MidiProgramSignal(low) :: Nil
+    val melodyPresignal1 = MidiProgramSignal {
+      context.normalFrequencySources {
+        (context.normalFrequencySources.length * Oracle.ask).floor.toInt
+      }
+    }
     
-    //val normal = context.normalFrequencySources((context.normalFrequencySources.length * oracle.ask.asInstanceOf[Double]).floor.toInt)
-    //Logger.log("instrument:" + normal + "\n")
-    //sources(1) transmit(MidiProgramSignal(normal))
+    val melodyPresignal2 = MidiProgramSignal {
+      context.normalFrequencySources {
+        (context.normalFrequencySources.length * Oracle.ask).floor.toInt
+      }
+    }
     
-    //val normal2 = context.normalFrequencySources((context.normalFrequencySources.length * oracle.ask.asInstanceOf[Double]).floor.toInt)
-    //Logger.log("instrument:" + normal2 + "\n")
-    //sources(3) transmit(MidiProgramSignal(normal2))
+    HistogramAccessor.install(rhythmSource.hashCode, rhythmHistogram)
+    HistogramAccessor.install(melodySource1.hashCode, melodyHistogram1)
+    HistogramAccessor.install(melodySource2.hashCode, melodyHistogram2)
     
+    val sources = rhythmSource :: melodySource1 :: melodySource2 :: Nil
+    val presignalIterator = (rhythmPresignal :: melodyPresignal1 :: melodyPresignal2 :: Nil).iterator
     
-    //sources.foreach{ s => 
-    //  val i = (127.0 * oracle.ask.asInstanceOf[Double]).floor.toInt
-    //  Logger.log("instrument:" + i + "\n")
-    //  s transmit(MidiProgramSignal(i))
-    //}
-
+    Logger.log("instruments:" + rhythmPresignal + " and " + melodyPresignal1 + " and " + melodyPresignal2 + "\n")
+    
     (new OneTimeRunner).execute(new Runnable() {
       def run() {
         val startLatch = new CountDownLatch(1)
@@ -68,25 +163,13 @@ class Facade {
           worker.start
           source.start
           source.sink.start
-          source ! presignals.head
-          worker ! "ready"
-          presignals = presignals.tail
+          source ! SignalMessage(presignalIterator next)
+          worker ! ReadyMessage 
         }
     
         startLatch.countDown
         finishLatch.await
       }
     })
-    
-    started = true
   }
-  
-  def shutdown() {
-    Manager broadcast "stop"
-    Manager.detachAll
-    device.release
-    started = false
-  }
-  
-  def hasStarted() = started
 }

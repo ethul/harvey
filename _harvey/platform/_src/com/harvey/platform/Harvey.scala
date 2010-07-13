@@ -10,6 +10,9 @@ import com.harvey.gui.GuiFacade
  * @email eric.thul AT gmail.com
  */
 object Harvey {
+  /**
+   * entry point for harvey
+   */
   def main(args: Array[String]) {
     (new GuiFacade).startup(new Facade)
   }

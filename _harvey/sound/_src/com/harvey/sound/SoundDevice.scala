@@ -1,6 +1,6 @@
 package com.harvey.sound
 
-import javax.sound.midi.MidiSystem
+import javax.sound.midi.{MidiSystem,MidiUnavailableException}
 
 /**
  * contract of a sound device
@@ -33,7 +33,14 @@ object SoundDevice {
     private val synthesizer = MidiSystem.getSynthesizer
     private val midiSinks = synthesizer.getChannels.filter(_ != null).map(new MidiSink(_)).toList
     
-    synthesizer.open
+    try {
+      synthesizer.open
+    }
+    catch {
+      case e: MidiUnavailableException => {
+        throw SoundException("unable to open midi device: " + e.getMessage)
+      }
+    }
     
     def sinks(): List[SignalSink] = midiSinks
     def release(): Unit = synthesizer.close 

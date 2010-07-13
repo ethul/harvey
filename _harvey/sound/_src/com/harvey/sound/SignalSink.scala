@@ -1,5 +1,7 @@
 package com.harvey.sound
 
+import com.harvey.platform.{StopMessage,SignedMessage,SignalMessage,TransmitMessage}
+
 import scala.actors.Actor
 import scala.actors.Actor._
 
@@ -11,28 +13,25 @@ sealed abstract class SignalSink extends Actor {
   def act() {
     loop {
       react {
-        case "stop" => {
+        case StopMessage => {
           exit
         }
-        case (MidiSignalOnWithDuration(value, amplitude, length), sender: Actor) => {
-          println("got signal from source")
+        case SignedMessage(sender, SignalMessage(MidiSignalOnWithDuration(value, amplitude, length))) => {
           receive(MidiSignalOn(value, amplitude))
           retransmit(sender, value, length)
         }
-        case _ @ message: Signal => {
-          receive(message)
+        case SignalMessage(signal) => {
+          receive(signal)
         }
       }
     }
   }
   def retransmit(sender: Actor, value: Int, length: Long) {
-    println("will send back to source from sink after: " + length)
     val sink = self
     actor {
       Thread sleep length
       receive(MidiSignalOff(value))
-      sender ! "transmit"
-      println("done, going back to source from sink helper")
+      sender ! TransmitMessage
     }
   }
 }

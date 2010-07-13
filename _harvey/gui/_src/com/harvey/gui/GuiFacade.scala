@@ -8,12 +8,14 @@ import scala.swing.ScrollPane
 import scala.swing.TextArea
 import scala.swing.event.ButtonClicked
 import javax.swing.SwingUtilities
+import javax.swing.text.DefaultCaret
 
 class GuiFacade {
-  var platform: Facade = null
+  var platform: Facade = _
   val rows = 20
   val columns = 50
   val area = new TextArea(rows, columns)
+  area.peer.getCaret.asInstanceOf[DefaultCaret].setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE)
   Logger.attach((message: String) => {
     area.append(message)
   })
@@ -41,7 +43,7 @@ class GuiFacade {
     listenTo(startButton, stopButton)
     reactions += {
       case ButtonClicked(`startButton`) => {
-        if (!platform.hasStarted) {
+        if (!platform.started) {
           platform.startup 
         }
         else {

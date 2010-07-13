@@ -1,5 +1,7 @@
 package com.harvey.platform.util
 
+import scala.math.{sqrt,log}
+
 abstract class RandomNumberGenerator {
   def rand(): Double 
 }
@@ -63,7 +65,7 @@ class NormalRandomNumberGenerator(m: Double, s: Double) extends RandomNumberGene
       }
       while (w >= 1.0 || w < 1e-30)
     
-      w = Math.sqrt(Math.log(w)*(-2.0/w))
+      w = sqrt(log(w)*(-2.0/w))
       normal_x1 *= w
       normal_x2 *= w
       normal_x2_valid = true

@@ -2,3 +2,4 @@
 _out/
 _harvey/platform/_out/
 _tmp/
+.scala_dependencies
