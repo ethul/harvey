@@ -17,11 +17,13 @@ import scalaz.effects._
  * @since 1.0
  */
 object Startup {
-  def main(args: Array[String]) {
+  private[this] val version = 1.1
 
+  def main(args: Array[String]) {
     val r =
       for {
-        _ <- putStrLn("starting up...")
+        _ <- putStrLn("harvey " + version)
+        _ <- putOut("composing... ")
         a <- Device.open
         b <- IO(w => (w, Configuration))
         c <- IO(w => (w, Uniform(System.nanoTime)))
@@ -35,7 +37,7 @@ object Startup {
               }
              }))
         _ <- Device.close(a)
-        _ <- putStrLn("shutting down...")
+        _ <- putStrLn("done")
       } yield ()
 
     r.unsafePerformIO

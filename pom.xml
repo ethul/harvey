@@ -49,11 +49,6 @@
       <version>${scala.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-swing</artifactId>
-      <version>${scala.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.scalaz</groupId>
       <artifactId>scalaz-core_${scala.version}</artifactId>
       <version>6.0-SNAPSHOT</version>
@@ -70,14 +65,26 @@
     <testSourceDirectory>src/test/scala</testSourceDirectory>
     <plugins>
       <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+          <executions>
+            <execution>
+              <goals>
+                  <goal>copy-dependencies</goal>
+              </goals>
+              <configuration>
+                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              </configuration>
+            </execution>
+          </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <classpathPrefix>/home/ethul/.m2/repository/</classpathPrefix>
-              <classpathMavenRepositoryLayout>true</classpathMavenRepositoryLayout>
+              <classpathPrefix>lib/</classpathPrefix>
               <mainClass>com.harvey.Startup</mainClass>
             </manifest>
           </archive>

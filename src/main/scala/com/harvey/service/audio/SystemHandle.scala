@@ -30,12 +30,8 @@ case class SystemHandle protected[audio] (rate: Float) {
     xs => {
       @tailrec def loop(n: Int, v: SeqView[Sample,Stream[Sample]]): Unit = {
         if (!v.isEmpty) {
-          val start = System.currentTimeMillis
-          val samples = v.toList
-          println("writeStream.v.tolist took: " + (System.currentTimeMillis-start) + " millis")
-
           buffer.clear
-          samples.foreach(x => buffer.putShort((x * short).asInstanceOf[Short]))
+          v.foreach(x => buffer.putShort((x * short).asInstanceOf[Short]))
           speaker.write(buffer.array, 0, chunk.toInt * 2)
           loop(n+1, xs.view(chunk.toInt * n, chunk.toInt * (n+1)))
         }

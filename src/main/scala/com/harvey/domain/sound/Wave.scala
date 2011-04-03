@@ -29,8 +29,16 @@ sealed trait Wave { a =>
    * the self type as "a" for this trait to retain that reference
    * when we set up the new wave instance's apply method
    */
-  private[this] def lift: Lifted => Wave => Wave = f => b => new Wave {
-    def sample: Time => Sample = x => f(a sample x, b sample x)
+  private[this] def lift: Lifted => Wave => Wave = {
+    f => b => new Wave {
+      def sample: Time => Sample = x => f(a sample x, b sample x)
+    }
+  }
+}
+
+object Wave {
+  val zero = new Wave {
+    def sample: Time => Sample = _ => 0.0
   }
 }
 
