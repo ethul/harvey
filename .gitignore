@@ -1,5 +1,9 @@
 .manager/
-_out/
-_harvey/platform/_out/
-_tmp/
+.settings/
 .scala_dependencies
+.*swp
+.classpath
+doc/
+lib/
+tmp/
+target/
