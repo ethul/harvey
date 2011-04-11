@@ -7,6 +7,7 @@ import sound._, Granular._
 import com.harvey.service.random
 import com.harvey.service.random.Variable
 import com.harvey.service.config.Configuration
+import scala.annotation.tailrec
 import scalaz._, Scalaz._
 
 /**
@@ -21,19 +22,28 @@ object Harvey {
   private[this] val maxPosition = 5.0 * sampleRate
   private[this] val maxGrains = 25
 
-  def generate: Configuration => Variable => Stream[Sample] = {
+  def generate: Configuration => Variable => EphemeralStream[Sample] = {
     config => random => {
       import Util._
 
-      val r =
-        for {
-          a <- makeWave
-          b <- Grains.create
-          c <- Grains.forCloud
-          d <- Grains.repeater
-        } yield d(maxGrains)(a map b map c)
+      def from(acc: EphemeralStream[Sample]): EphemeralStream[Sample] = {
+        acc match {
+          case EphemeralStream.empty => {
+            val r =
+              for {
+                a <- makeWave
+                b <- Grains.create
+                c <- Grains.forCloud
+                d <- Grains.repeater
+              } yield d(maxGrains)(a map b map c)
 
-      (Clouds.form compose r)(random) take maxPosition.toInt
+            from(EphemeralStream.fromStream((Clouds.form compose r)(random) take maxPosition.toInt))
+          }
+          case as => EphemeralStream.cons(as.head(),from(as.tail()))
+        }
+      }
+
+      from(EphemeralStream.empty)
     }
   }
 

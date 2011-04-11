@@ -8,7 +8,7 @@ package com.harvey.service
  * @version
  * @since 
  */
-package object audio {
+package object system {
   type Rate = Double
   type Time = Double
   type Millisecond = Int

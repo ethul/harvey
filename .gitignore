@@ -4,6 +4,5 @@
 .*swp
 .classpath
 doc/
-lib/
 tmp/
 target/
