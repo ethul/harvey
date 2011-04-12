@@ -34,7 +34,7 @@ object Startup {
         b <- IO(w => (w, Configuration))
         c <- IO(w => (w, Uniform(System.nanoTime)))
         d <- IO(w => (w, Harvey.generate(b)(c)))
-        e <- Enumerators.ephemeralIO2(d)(22050) {
+        e <- Enumerators.ephemeralNonrecursiveIO(d)(22050) {
                Iteratees.ephemeralIO { 
                 (s: EphemeralStream[Sample]) => 
                   Device.writeStream(a)(s) >>=| Device.writeStream(x)(s)

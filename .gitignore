@@ -4,5 +4,6 @@
 .*swp
 .classpath
 doc/
+html/
 tmp/
 target/
