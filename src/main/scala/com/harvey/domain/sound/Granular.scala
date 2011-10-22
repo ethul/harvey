@@ -3,7 +3,7 @@
  */
 package com.harvey.domain.sound
 
-import com.harvey.service.random.Variable
+import com.harvey.service.random.{Variable,Generator,Uniform}
 import scala.annotation.tailrec
 
 /**
@@ -24,21 +24,33 @@ object Granular {
   private[this] val maxPosition = 5.0 * sampleRate
 
   object Grains {
-    def forCloud: Variable => Grain => CloudGrain = {
+    import Generator._
+
+    def forCloud: Variable[Double] => Grain => CloudGrain = {
       random => grain => {
-        val position = (random.variate[Double] * maxPosition).toInt
-        CloudGrain(position = position, grain = grain)
+        //val position = (random.variate[Double] * maxPosition).toInt
+        implicitly[Generator[Uniform]].generate match {
+          case Uniform(x) => {
+            val position = (x * maxPosition).toInt
+            CloudGrain(position = position, grain = grain)
+          }
+        }
       }
     }
 
-    def create: Variable => Wave => Grain = {
+    def create: Variable[Double] => Wave => Grain = {
       random => wave => {
-        val time = random.variate[Double] * maxTime * sampleRate
-        Grain(duration = time, wave = wave)
+        //val time = random.variate[Double] * maxTime * sampleRate
+        implicitly[Generator[Uniform]].generate match {
+          case Uniform(x) => {
+            val time = x * maxTime * sampleRate
+            Grain(duration = time, wave = wave)
+          }
+        }
       }
     }
 
-    def repeater: Variable => Int => (() => CloudGrain) => CloudGrains = {
+    def repeater: Variable[Double] => Int => (() => CloudGrain) => CloudGrains = {
       random => repeats => f => {
         @tailrec def loop(xs: CloudGrains, n: Int, f: () => CloudGrain): CloudGrains = {
           n match {
@@ -46,7 +58,10 @@ object Granular {
            case _ => loop(f() :: xs,n-1,f)
           }
         }
-        loop(Nil,(repeats * random.variate[Double]).toInt,f)
+        //loop(Nil,(repeats * random.variate[Double]).toInt,f)
+        implicitly[Generator[Uniform]].generate match {
+          case Uniform(x) => loop(Nil,(x * repeats).toInt,f)
+        }
       }
     }
   }

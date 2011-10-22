@@ -5,5 +5,7 @@
 .classpath
 doc/
 html/
+lib/
+project/
 tmp/
 target/

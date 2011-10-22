@@ -1,45 +1,43 @@
 /**
  * harvey (c) 2011
  */
-package com.harvey.service.random
+package com.harvey
+package service
+package random
 
-import Formatter._
+import scalaz.EphemeralStream
 
-// TODO: make this a Stream[Double] ? then we can take random values from the stream
 // algebraic data type, Variable = Uniform(seed1, seed2) | Normal | Poisson | etc.
-sealed trait Variable {
-  def variate[A: Formatter]: A
+// TODO: ethul, the algebraic data type should be
+//   Variable = Discrete | Continuous
+// the variates of a random variable are realized given a type of distribution, like
+// uniform, normal, poisson, etc.
+
+/*
+trait Variable {
+  def variate
 }
 
-case class Uniform(seed: Long) extends Variable {
-  private[this] val factor = 1.0 / 2147483563.0
-  private[this] val seedSized = seed.toString drop (seed.toString.length-12)
-  private[this] var s1 = (seedSized take 6) toLong
-  private[this] var s2 = (seedSized drop 6) toLong
-  
-  def variate[A: Formatter] = implicitly[Formatter[A]].format(uniform)
+case class Discrete() extends Variable {
+  val generator: Generator = implicitly[Generator[A]].generate
+  val discreteSet: Set[B] = implicitly[Set[B]].get
+}
 
-  /**
-   * this algorithm is from http://cg.scs.carleton.ca/~luc/lecuyer.c
-   */
-  private[this] def uniform = {
-    var k = s1 / 53668L
-    s1 = 40014 * (s1 % 53668) - k * 12211
-    if (s1 < 0) { 
-      s1 += 2147483563 
-    }
+perhaps we can make it so that the generator and the set of values to pick can
+be instances of a type class. for example, we can have uniform, normal, poisson
+generators. and we can have integers, set of values, lists as the discrete set
+which can be picked by the result of the generator
 
-    k = s2 / 52774
-    s2 = 40692 * (s2 % 52774) - k * 3791;
-    if (s2 < 0) {
-      s2 += 2147483399
-    }
+the client code can then import the right generator and set of values into the
+namespace to be picked up each time that the variate method is invoked on the
+randome variable
+*/
 
-    var z: Double = (s1 - 2147483563) + s2;
-    if (z < 1) {
-      z += 2147483562
-    }
+sealed trait Variable[A] {
+  def variate: A
+  def variates: EphemeralStream[A] = EphemeralStream.cons(variate, variates)
+}
 
-    z * factor;
-  }
+case class Discrete[A: VariateMethod](space: ProbabilitySpace[A]) extends Variable[A] {
+  def variate = implicitly[VariateMethod[A]].apply
 }

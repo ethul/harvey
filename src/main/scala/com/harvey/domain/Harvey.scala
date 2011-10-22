@@ -20,9 +20,9 @@ object Harvey {
   private[this] val maxFrequency = sampleRate / 3.0
   private[this] val maxTime = 0.5
   private[this] val maxPosition = 5.0 * sampleRate
-  private[this] val maxGrains = 25
+  private[this] val maxGrains = 10
 
-  def generate: Configuration => Variable => EphemeralStream[Sample] = {
+  def generate: Configuration => Variable[Double] => EphemeralStream[Sample] = {
     config => random => {
       import Util._
 
@@ -48,8 +48,8 @@ object Harvey {
   }
 
   private[this] object Util {
-    def makeWave: Variable => () => Wave = {
-      random => () => Sine(maxFrequency * random.variate[Double])
+    def makeWave: Variable[Double] => () => Wave = {
+      random => () => Sine(random.variate)
     }
   }
 }

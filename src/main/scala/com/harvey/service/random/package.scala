@@ -1,14 +1,14 @@
 /**
  * harvey (c) 2011
  */
-package com.harvey.service
+package com.harvey
+package service
 
 /**
  * this package object for the random service
  */
 package object random {
-  /**
-   * monadic type for random number generation
-   */
-  //type Random[A] = Generator => (Generator,A)
+  type Probability = Double
+  type SampleSpace[A] = Set[A]
+  type Pmf[A] = A => Probability
 }

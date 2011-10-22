@@ -60,19 +60,19 @@ object Iteration {
               var bs = as;
               while (! done) {
                 next match {
-                  case x@IterV.DoneM(_,_) => {
+                  case x@DoneM(_,_) => {
                     next = x
                     done = true
                   }
-                  case IterV.ContM(k) => {
+                  case ContM(k) => {
                     bs match {
                       case EphemeralStream.empty => {
-                        next = k(IterV.EOF[EphemeralStream[A]]).value.unsafePerformIO
+                        next = k(EOF[EphemeralStream[A]]).value.unsafePerformIO
                       }
                       case cs => {
                         val left = cs.take(chunk)
                         bs = cs.drop(chunk)
-                        next = k(IterV.El(left)).value.unsafePerformIO
+                        next = k(El(left)).value.unsafePerformIO
                       }
                     }
                   }
