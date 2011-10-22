@@ -1,11 +1,1 @@
-.manager/
-.settings/
-.scala_dependencies
 .*swp
-.classpath
-doc/
-html/
-lib/
-project/
-tmp/
-target/
