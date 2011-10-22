@@ -17,9 +17,8 @@ app.configure "production", -> app.use express.errorHandler()
 
 # routes
 app.get "/", (req,res) ->
-  if not req.session.views then req.session.views = 0
-  res.render "index", title: "express views #{req.session.views}"
   req.session.views++
+  res.render "index", title: "express views #{req.session.views}"
 
 app.listen 3000
 console.log "express server listening on port #{app.address().port} in #{app.settings.env} mode"
