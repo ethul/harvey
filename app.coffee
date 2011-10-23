@@ -17,8 +17,7 @@ app.configure "production", -> app.use express.errorHandler()
 
 # routes
 app.get "/", (req,res) ->
-  req.session.views++
-  res.render "index", title: "express views #{req.session.views}"
+  res.render "index"
 
 app.listen 3000
 console.log "express server listening on port #{app.address().port} in #{app.settings.env} mode"
