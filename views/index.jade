@@ -1,5 +1,20 @@
-h1 Harvey
+header
+  h1 Harvey
+div.wrapper
+  script(type="text/x-handlebars")
+    |{{#view Harvey.FrequencyView frequencyBinding="Harvey.mainController.frequency"}}
+    |  {{frequency}} Hz
+    |{{/view}}
+  script(type="text/x-handlebars")
+    |{{#view Ember.Button target="Harvey.mainController" action="compose"}}
+    |  Compose
+    |{{/view}}
+footer
+  a(href="https://raw.github.com/ethul/harvey/develop/LICENSE") License
 script(src="/javascripts/jquery.min.js")
+script(src="/javascripts/underscore.min.js")
 script(src="/javascripts/ember.min.js")
+script(src="/javascripts/audiolib.min.js")
+script(src="/javascripts/music.min.js")
 script(src="/assets/harvey.js")
 script(src="/assets/index.js")
