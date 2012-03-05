@@ -2,14 +2,39 @@
 @import "frame.less";
 @import "fonts.less";
 @import "mixins.less";
+@import "color-oldshoes.less";
 
-//background-color: #351d00;
-//color: #fcfcfc;
-//background-color: #981a00;
+@border: 10px;
+
+body {
+  background-color: @baseColor;
+}
+
+header {
+  background-color: @colorThree;
+}
 
 h1 {
+  .font-seaside-resort;
   .gargantuan;
   font-weight: normal;
+  text-align: center;
+  color: @colorOne;
+  margin: 0;
+  padding-top: @1col/4;
+  padding-bottom: @1col/4;
+}
+
+.wrapper {
+  margin: 0 auto;
+  padding-top: 100px;
+  text-align: center;
+}
+
+footer {
+  margin: 0;
+  padding-top: @2cols;
+  padding-bottom: @1col;
   text-align: center;
 }
 
